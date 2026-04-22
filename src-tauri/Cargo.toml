@@ -1,0 +1,87 @@
+[package]
+name = "desktop-agent"
+version = "0.1.0"
+description = "A cross-platform desktop automation tool with skill system"
+authors = ["Desktop Agent Team"]
+license = "MIT"
+repository = "https://github.com/desktop-agent/desktop-agent"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { workspace = true, features = ["codegen"] }
+
+[dependencies]
+# Tauri
+tauri = { workspace = true, features = ["shell-open", "system-tray", "notification-all"] }
+tauri-plugin-window-state = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
+
+# Async runtime
+tokio = { workspace = true }
+async-trait = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+tracing-appender = { workspace = true }
+
+# Database
+sqlx = { workspace = true }
+
+# Configuration
+serde_yaml = { workspace = true }
+dirs = { workspace = true }
+
+# Security
+hmac = { workspace = true }
+sha2 = { workspace = true }
+aes-gcm = { workspace = true }
+keyring = { workspace = true }
+base64 = "0.21"
+
+# HTTP
+hyper = { workspace = true }
+hyper-tls = { workspace = true }
+reqwest = { workspace = true }
+
+# Utilities
+uuid = { workspace = true }
+chrono = { workspace = true }
+regex = { workspace = true }
+glob = { workspace = true }
+walkdir = { workspace = true }
+once_cell = "1.19"
+semver = "1.0"
+sysinfo = "0.30"
+gethostname = "0.4"
+os_info = "3.7"
+rand = "0.8"
+hex = "0.4"
+
+[dev-dependencies]
+tempfile = "3.8"
+
+# Platform-specific
+[target.'cfg(unix)'.dependencies]
+nix = "0.27"
+
+[features]
+# This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
+custom-protocol = ["tauri/custom-protocol"]
+
+# Platform specific features
+default = ["custom-protocol"]
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
