@@ -5,6 +5,7 @@
 //!
 //! Provides a secure HTTP client with timeout, retry, and rate limiting support
 
+#![allow(dead_code)]
 use crate::error::{AppError, Result};
 use crate::security::rate_limiter::RateLimiter;
 use serde::{Deserialize, Serialize};
@@ -15,7 +16,7 @@ use tokio::sync::Semaphore;
 
 /// HTTP request method
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "uppercase")]
+#[serde(rename_all = "UPPERCASE")]
 pub enum HttpMethod {
     GET,
     POST,
@@ -123,7 +124,7 @@ impl NetworkService {
         };
 
         Ok(Self {
-            config,
+            config: config.clone(),
             client,
             rate_limiter,
             semaphore: Arc::new(Semaphore::new(config.max_concurrent_requests)),

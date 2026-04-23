@@ -5,6 +5,7 @@
 //!
 //! Common utilities used across the application
 
+#![allow(dead_code)]
 pub mod cache;
 pub mod perf;
 

@@ -1,6 +1,7 @@
 // Copyright 2024 Desktop Agent Team
 // Licensed under MIT License
 
+#![allow(dead_code)]
 use crate::database::Database;
 use crate::error::Result;
 use serde::{Deserialize, Serialize};
@@ -8,7 +9,7 @@ use sqlx::SqlitePool;
 use std::sync::Arc;
 
 /// User record in database
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct UserRecord {
     pub id: String,
     pub platform: String,

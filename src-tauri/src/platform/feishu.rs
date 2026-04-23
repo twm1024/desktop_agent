@@ -5,13 +5,13 @@
 //!
 //! Provides webhook handling and API integration for Feishu/Lark platform
 
+#![allow(dead_code)]
 use async_trait::async_trait;
 use crate::platform::adapter::{PlatformAdapter, PlatformEvent, PlatformResponse, PlatformUser, PlatformMessage, ResponseMessage, ChatInfo, ChatType, MediaType, PlatformError};
 use crate::platform::PlatformType;
 use crate::security::webhook::WebhookVerifier;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::Arc;
 
 /// Feishu platform adapter
 pub struct FeishuAdapter {
@@ -153,7 +153,7 @@ impl PlatformAdapter for FeishuAdapter {
 
     async fn parse_event(
         &self,
-        headers: &HashMap<String, String>,
+        _headers: &HashMap<String, String>,
         body: &str,
     ) -> Result<PlatformEvent, PlatformError> {
         // Parse Feishu event JSON

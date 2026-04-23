@@ -7,7 +7,7 @@ use tauri::State;
 
 #[tauri::command]
 pub async fn get_system_info(state: State<'_, AppState>) -> Result<crate::services::system_service::SystemInfo> {
-    let mut system_service = state.services.system_service.as_ref().clone();
+    let system_service = state.services.system_service.as_ref();
     let info = system_service.get_system_info()?;
     Ok(info)
 }

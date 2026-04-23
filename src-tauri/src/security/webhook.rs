@@ -1,12 +1,15 @@
 // Copyright 2024 Desktop Agent Team
 // Licensed under MIT License
 
+#![allow(dead_code)]
 use crate::error::{AppError, Result};
+use base64::Engine;
 use hmac::{Hmac, Mac};
-use sha2::{Digest, Sha1, Sha256};
+use sha1::Sha1;
+use sha2::{Digest, Sha256};
 use std::collections::HashSet;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use tokio::sync::RwLock;
 use tracing::{debug, warn};
 
@@ -55,7 +58,7 @@ impl WebhookVerifier {
         let expected = hex::encode(mac.finalize().into_bytes());
 
         // Use constant-time comparison
-        Ok(hmac::compare_digest(expected.as_bytes(), signature.as_bytes()))
+        Ok(Self::constant_time_compare(expected.as_bytes(), signature.as_bytes()))
     }
 
     /// Verify WeCom (企业微信) webhook signature
@@ -82,7 +85,7 @@ impl WebhookVerifier {
         let expected = hex::encode(result);
 
         // Use constant-time comparison
-        Ok(hmac::compare_digest(expected.as_bytes(), signature.as_bytes()))
+        Ok(Self::constant_time_compare(expected.as_bytes(), signature.as_bytes()))
     }
 
     /// Verify DingTalk webhook signature
@@ -102,14 +105,27 @@ impl WebhookVerifier {
             .map_err(|e| AppError::security(format!("HMAC error: {}", e)))?;
 
         mac.update(string_to_sign.as_bytes());
-        let expected = base64::encode(mac.finalize().into_bytes());
+        let expected = base64::engine::general_purpose::STANDARD.encode(mac.finalize().into_bytes());
 
         // Use constant-time comparison
-        Ok(hmac::compare_digest(expected.as_bytes(), signature.as_bytes()))
+        Ok(Self::constant_time_compare(expected.as_bytes(), signature.as_bytes()))
+    }
+
+    /// Constant-time comparison to prevent timing attacks
+    fn constant_time_compare(a: &[u8], b: &[u8]) -> bool {
+        if a.len() != b.len() {
+            return false;
+        }
+        let mut result = 0u8;
+        for (x, y) in a.iter().zip(b.iter()) {
+            result |= x ^ y;
+        }
+        result == 0
     }
 }
 
 /// Replay attack protection
+#[derive(Clone)]
 pub struct ReplayProtection {
     processed_messages: Arc<RwLock<HashSet<String>>>,
     message_ttl: Duration,

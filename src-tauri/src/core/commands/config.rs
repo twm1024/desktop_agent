@@ -3,7 +3,6 @@
 
 use crate::config::Config;
 use crate::error::Result;
-use tauri::State;
 
 #[tauri::command]
 pub async fn get_config(key: Option<String>) -> Result<serde_json::Value> {
@@ -22,7 +21,7 @@ pub async fn get_config(key: Option<String>) -> Result<serde_json::Value> {
 }
 
 #[tauri::command]
-pub async fn set_config(configs: serde_json::Value) -> Result<()> {
+pub async fn set_config(_configs: serde_json::Value) -> Result<()> {
     // TODO: Set config values
     Ok(())
 }

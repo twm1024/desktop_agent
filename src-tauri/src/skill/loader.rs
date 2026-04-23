@@ -1,11 +1,12 @@
 // Copyright 2024 Desktop Agent Team
 // Licensed under MIT License
 
+#![allow(dead_code)]
 use crate::database::Database;
 use crate::error::{AppError, Result};
 use crate::skill::manifest::SkillManifest;
 use crate::skill::permissions::SkillPermissions;
-use crate::skill::types::{SkillInfo, SkillResult};
+use crate::skill::types::SkillInfo;
 use crate::services::ServiceContainer;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
@@ -123,7 +124,7 @@ impl SkillLoader {
                 // Insert new skill
                 let now = chrono::Utc::now().timestamp();
                 let manifest_json = serde_json::to_string(&loaded.manifest)
-                    .map_err(|e| AppError::serialization(e))?;
+                    .map_err(|e| AppError::Serialization(e.to_string()))?;
 
                 sqlx::query(
                     r#"

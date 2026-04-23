@@ -1,14 +1,14 @@
 // Copyright 2024 Desktop Agent Team
 // Licensed under MIT License
 
+#![allow(dead_code)]
 use crate::error::{AppError, Result};
-use crate::skill::manifest::{
-    FilePermissionDecl, NetworkPermissionDecl, SkillPermissionDecl, SystemPermissionDecl,
-};
+use crate::skill::manifest::SkillPermissionDecl;
 use regex::Regex;
 use std::path::Path;
 
 /// Skill permissions validator
+#[derive(Debug, Clone)]
 pub struct SkillPermissions {
     file_perms: Vec<FilePermission>,
     network_perms: Vec<NetworkPermission>,
@@ -22,7 +22,7 @@ pub struct FilePermission {
     pub recursive: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FileAccess {
     Read,
     Write,
@@ -195,6 +195,21 @@ impl SkillPermissions {
             "System action denied: {:?}",
             action
         )))
+    }
+
+    /// Check if any file access permissions are defined (convenience method)
+    pub fn has_file_access(&self) -> bool {
+        !self.file_perms.is_empty()
+    }
+
+    /// Check if any network access permissions are defined (convenience method)
+    pub fn has_network_access(&self) -> bool {
+        !self.network_perms.is_empty()
+    }
+
+    /// Check if any system action permissions are defined (convenience method)
+    pub fn has_system_access(&self) -> bool {
+        !self.system_perms.is_empty()
     }
 
     /// Match path pattern

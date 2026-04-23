@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 // Copyright 2024 Desktop Agent Team
 // Licensed under MIT License
 
@@ -5,9 +6,9 @@
 //!
 //! Handles loading, saving, and accessing application configuration
 
-use crate::error::{AppError, Result};
+use crate::error::Result;
 use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use tracing::{info, warn};
 
 /// Application configuration

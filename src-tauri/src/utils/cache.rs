@@ -5,6 +5,7 @@
 //!
 //! Provides a thread-safe, typed cache with automatic expiration
 
+#![allow(dead_code)]
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};

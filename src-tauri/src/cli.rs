@@ -5,13 +5,14 @@
 //!
 //! Provides CLI commands for managing Desktop Agent from the terminal
 
+#![allow(dead_code)]
 use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 /// CLI command
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "command")]
+#[serde(tag = "type")]
 pub enum CliCommand {
     /// Start the application
     Start { config: Option<PathBuf> },

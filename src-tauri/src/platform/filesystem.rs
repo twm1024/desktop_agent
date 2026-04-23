@@ -3,8 +3,12 @@
 //! Provides a unified interface for file operations across Windows, macOS, and Linux
 //! with proper permission checking and security measures.
 
+#![allow(dead_code)]
 use std::path::{Path, PathBuf};
 use crate::error::Result;
+
+#[cfg(unix)]
+use std::os::unix::fs::MetadataExt;
 
 /// Platform-specific file system information
 #[derive(Debug, Clone)]
@@ -251,7 +255,7 @@ impl AbstractFileSystem for DefaultFileSystem {
                 }
                 #[cfg(windows)]
                 {
-                    !metadata.permissions().readonly()
+                    Ok(!metadata.permissions().readonly())
                 }
             }
             FileAccess::Write => {
@@ -263,7 +267,7 @@ impl AbstractFileSystem for DefaultFileSystem {
                 }
                 #[cfg(windows)]
                 {
-                    !metadata.permissions().readonly()
+                    Ok(!metadata.permissions().readonly())
                 }
             }
             FileAccess::Execute => {
@@ -295,7 +299,7 @@ impl AbstractFileSystem for DefaultFileSystem {
                 }
                 #[cfg(windows)]
                 {
-                    !metadata.permissions().readonly()
+                    Ok(!metadata.permissions().readonly())
                 }
             }
             FileAccess::All => Ok(true),
@@ -312,7 +316,6 @@ impl AbstractFileSystem for DefaultFileSystem {
 
         #[cfg(unix)]
         {
-            use std::os::unix::fs::MetadataExt;
             let statvfs = nix::sys::statvfs::statvfs(&mount_point)
                 .map_err(|e| crate::error::AppError::Filesystem(format!("Failed to get volume info: {}", e)))?;
 
@@ -465,11 +468,10 @@ fn find_mount_point(path: &Path) -> PathBuf {
         #[cfg(unix)]
         {
             if let Ok(stat) = std::fs::metadata(parent) {
-                if let Some(device) = stat.dev() {
-                    // Found the root
-                    if parent == parent.canonicalize().unwrap_or(parent.to_path_buf()) {
-                        return current;
-                    }
+                let _device = stat.dev();
+                // Found the root
+                if parent == &parent.canonicalize().unwrap_or(parent.to_path_buf()) {
+                    return current;
                 }
             }
         }

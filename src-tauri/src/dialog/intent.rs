@@ -5,6 +5,7 @@
 //!
 //! Provides pattern-based intent matching with slot filling
 
+#![allow(dead_code)]
 use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -25,6 +26,8 @@ pub struct Slot {
     pub value: SlotValue,
     pub required: bool,
     pub confirmed: bool,
+    #[serde(default)]
+    pub prompt: String,
 }
 
 /// Slot value types
@@ -146,7 +149,7 @@ impl IntentRecognizer {
 
     /// Calculate match score between input and intent patterns
     fn match_score(&self, input: &str, definition: &IntentDefinition) -> f64 {
-        let mut max_score = 0.0;
+        let mut max_score: f64 = 0.0;
 
         for pattern in &definition.patterns {
             let pattern_lower = pattern.to_lowercase();
@@ -277,6 +280,7 @@ impl IntentRecognizer {
                 value,
                 required: slot_def.required,
                 confirmed: false,
+                prompt: slot_def.prompt.clone(),
             });
         }
 
@@ -388,7 +392,7 @@ impl IntentRecognizer {
     }
 
     /// Get missing required slots
-    pub fn get_missing_slots(&self, intent: &Intent) -> Vec<&Slot> {
+    pub fn get_missing_slots<'a>(&self, intent: &'a Intent) -> Vec<&'a Slot> {
         intent.slots.iter()
             .filter(|s| s.required && s.value.is_empty())
             .collect()

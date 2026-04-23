@@ -1,8 +1,8 @@
 // Copyright 2024 Desktop Agent Team
 // Licensed under MIT License
 
+#![allow(dead_code)]
 use crate::error::{AppError, Result};
-use regex::Regex;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
 use std::path::Path;
@@ -104,7 +104,7 @@ impl TextService {
     ) -> Result<Vec<TextSearchResult>> {
         let mut results = Vec::new();
 
-        let search_content = if case_sensitive {
+        let _search_content = if case_sensitive {
             content.to_string()
         } else {
             content.to_lowercase()
@@ -226,7 +226,7 @@ impl TextService {
         replacement: &str,
         case_sensitive: bool,
     ) -> Result<(String, Vec<ReplaceInfo>)> {
-        let search_content = if case_sensitive {
+        let _search_content = if case_sensitive {
             content.to_string()
         } else {
             content.to_lowercase()

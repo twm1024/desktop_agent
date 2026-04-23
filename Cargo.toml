@@ -10,6 +10,13 @@ edition = "2021"
 authors = ["Desktop Agent Team"]
 license = "MIT"
 
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
+
 [workspace.dependencies]
 # Tauri
 tauri = { version = "1.5", features = [] }
@@ -48,7 +55,7 @@ keyring = "2.3"
 # HTTP
 hyper = { version = "1.0", features = ["full"] }
 hyper-tls = "0.6"
-reqwest = { version = "0.11", features = ["json"] }
+reqwest = { version = "0.11", features = ["json", "multipart"] }
 
 # Utilities
 uuid = { version = "1.6", features = ["v4", "serde"] }
@@ -56,14 +63,3 @@ chrono = { version = "0.4", features = ["serde"] }
 regex = "1.10"
 glob = "0.3"
 walkdir = "2.4"
-
-# Platform specific
-[target.'cfg(windows)'.dependencies]
-windows = { version = "0.52", features = ["Win32_System_Console", "Win32_Foundation"] }
-winreg = "0.52"
-
-[target.'cfg(target_os = "macos")'.dependencies]
-core-foundation = "0.9"
-
-[target.'cfg(target_os = "linux")'.dependencies]
-nix = { version = "0.27", features = ["sched"] }

@@ -5,6 +5,7 @@
 //!
 //! Provides functionality for backing up and restoring application configuration and data
 
+#![allow(dead_code)]
 use crate::config::Config;
 use crate::database::Database;
 use crate::error::Result;
@@ -15,7 +16,7 @@ use std::path::{Path, PathBuf};
 use tracing::{info, warn};
 use zip::{write::FileOptions, ZipWriter};
 
-use tokio::io::AsyncWriteExt;
+use std::io::Write;
 
 /// Backup metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -108,13 +109,13 @@ impl BackupService {
             // Create ZIP archive
             let file = fs::File::create(&backup_path)?;
             let mut zip = ZipWriter::new(file);
-            let options = FileOptions::default()
+            let zip_options = FileOptions::default()
                 .compression_method(zip::CompressionMethod::Deflated);
 
             // Backup config
             if options.includes.config {
-                if let Some(config_dir) = self.config.config_dir().ok() {
-                    if let Err(e) = self.add_dir_to_zip(&mut zip, &config_dir, "config", options) {
+                if let Some(config_dir) = Config::data_dir().ok() {
+                    if let Err(e) = self.add_dir_to_zip(&mut zip, &config_dir, "config", zip_options.clone()) {
                         warn!("Failed to backup config: {}", e);
                     }
                 }
@@ -123,7 +124,7 @@ impl BackupService {
             // Backup database
             if options.includes.database {
                 if let Some(db_path) = Config::database_path().ok() {
-                    if let Err(e) = self.add_file_to_zip(&mut zip, &db_path, "database.db", options) {
+                    if let Err(e) = self.add_file_to_zip(&mut zip, &db_path, "database.db", zip_options.clone()) {
                         warn!("Failed to backup database: {}", e);
                     }
                 }
@@ -131,8 +132,8 @@ impl BackupService {
 
             // Backup skills
             if options.includes.skills {
-                if let Some(skills_dir) = self.config.skill_dir().ok() {
-                    if let Err(e) = self.add_dir_to_zip(&mut zip, &skills_dir, "skills", options) {
+                if let Some(skills_dir) = Config::skill_dir().ok() {
+                    if let Err(e) = self.add_dir_to_zip(&mut zip, &skills_dir, "skills", zip_options) {
                         warn!("Failed to backup skills: {}", e);
                     }
                 }
@@ -145,7 +146,7 @@ impl BackupService {
             fs::create_dir_all(&backup_dir)?;
 
             if options.includes.config {
-                if let Some(config_dir) = self.config.config_dir().ok() {
+                if let Some(config_dir) = Config::data_dir().ok() {
                     let dest = backup_dir.join("config");
                     self.copy_dir(&config_dir, &dest)?;
                 }
@@ -158,7 +159,7 @@ impl BackupService {
             }
 
             if options.includes.skills {
-                if let Some(skills_dir) = self.config.skill_dir().ok() {
+                if let Some(skills_dir) = Config::skill_dir().ok() {
                     let dest = backup_dir.join("skills");
                     self.copy_dir(&skills_dir, &dest)?;
                 }
@@ -233,7 +234,7 @@ impl BackupService {
 
     /// List available backups
     pub async fn list_backups(&self) -> Result<Vec<BackupEntry>> {
-        let backup_dir = self.config.data_dir()?.join("backups");
+        let backup_dir = Config::data_dir()?.join("backups");
         let mut backups = Vec::new();
 
         if !backup_dir.exists() {
@@ -306,7 +307,7 @@ impl BackupService {
             },
             compress: true,
             encrypt: false,
-            destination: self.config.data_dir()?.join("backups"),
+            destination: Config::data_dir()?.join("backups"),
         };
 
         let backup = self.create_backup(options).await?;
@@ -319,9 +320,9 @@ impl BackupService {
 
     async fn restore_from_zip(
         &self,
-        backup_path: &Path,
-        includes: &BackupIncludes,
-        options: RestoreOptions,
+        _backup_path: &Path,
+        _includes: &BackupIncludes,
+        _options: RestoreOptions,
     ) -> Result<()> {
         // This would use a ZIP library to extract files
         // For now, return a placeholder
@@ -338,7 +339,7 @@ impl BackupService {
         let backup_data = backup_path.join("data");
 
         if includes.config && backup_data.join("config").exists() {
-            let config_dir = self.config.config_dir()?;
+            let config_dir = Config::data_dir()?;
             self.copy_dir(&backup_data.join("config"), &config_dir)?;
         }
 
@@ -351,7 +352,7 @@ impl BackupService {
         }
 
         if includes.skills && backup_data.join("skills").exists() {
-            let skills_dir = self.config.skill_dir()?;
+            let skills_dir = Config::skill_dir()?;
             self.copy_dir(&backup_data.join("skills"), &skills_dir)?;
         }
 

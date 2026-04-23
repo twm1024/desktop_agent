@@ -1,6 +1,7 @@
 // Copyright 2024 Desktop Agent Team
 // Licensed under MIT License
 
+#![allow(dead_code)]
 use crate::error::{AppError, Result};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -38,16 +39,21 @@ impl RateLimiter {
 
     /// Check user rate limit
     pub async fn check_user(&self, user_id: &str) -> Result<bool> {
-        self.check(&self.user_limits, user_id, self.user_limit).await
+        self.check_internal(&self.user_limits, user_id, self.user_limit).await
     }
 
     /// Check IP rate limit
     pub async fn check_ip(&self, ip: &str) -> Result<bool> {
-        self.check(&self.ip_limits, ip, self.ip_limit).await
+        self.check_internal(&self.ip_limits, ip, self.ip_limit).await
     }
 
-    /// Check rate limit
-    async fn check(
+    /// Generic check with key and cost
+    pub async fn check(&self, key: &str, _cost: usize) -> bool {
+        self.check_internal(&self.user_limits, key, self.user_limit).await.unwrap_or(false)
+    }
+
+    /// Check rate limit (internal)
+    async fn check_internal(
         &self,
         storage: &Arc<RwLock<HashMap<String, RateLimitRecord>>>,
         key: &str,

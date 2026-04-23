@@ -5,15 +5,15 @@
 //!
 //! Tracks conversation state across multiple message exchanges
 
+#![allow(dead_code)]
 use crate::database::Database;
-use crate::database::repositories::SessionRepository;
 use crate::error::Result;
 use crate::dialog::intent::Intent;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{info, warn};
+use tracing::info;
 
 /// Dialog session state
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -233,7 +233,7 @@ impl SessionManager {
     }
 
     /// Get context value
-    pub fn get_context(&self, session: &DialogSession, key: &str) -> Option<&serde_json::Value> {
+    pub fn get_context<'a>(&self, session: &'a DialogSession, key: &str) -> Option<&'a serde_json::Value> {
         session.context.get(key)
     }
 
@@ -278,7 +278,7 @@ impl SessionManager {
     }
 
     /// Get recent message history
-    pub fn get_recent_history(&self, session: &DialogSession, count: usize) -> Vec<&DialogMessage> {
+    pub fn get_recent_history<'a>(&self, session: &'a DialogSession, count: usize) -> Vec<&'a DialogMessage> {
         session.message_history.iter().rev().take(count).collect()
     }
 

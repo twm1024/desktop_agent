@@ -5,9 +5,9 @@
 //!
 //! Provides isolated execution environment for skills with resource limits
 
+#![allow(dead_code)]
 use crate::error::{AppError, Result};
-use crate::skill::permissions::{SkillPermissions, FileAccess, NetworkAccess, SystemAccess};
-use crate::security::rbac::{Permission, Resource, Action};
+use crate::skill::permissions::SkillPermissions;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
@@ -286,7 +286,7 @@ impl SandboxExecutor {
         // Check file access permissions
         if !self.config.allow_filesystem {
             if context.permissions.has_file_access() {
-                return Err(AppError::Permission(
+                return Err(AppError::PermissionDenied(
                     "File system access denied by sandbox policy".to_string(),
                 ));
             }
@@ -295,7 +295,7 @@ impl SandboxExecutor {
         // Check network access permissions
         if !self.config.allow_network {
             if context.permissions.has_network_access() {
-                return Err(AppError::Permission(
+                return Err(AppError::PermissionDenied(
                     "Network access denied by sandbox policy".to_string(),
                 ));
             }
@@ -303,7 +303,7 @@ impl SandboxExecutor {
 
         // Check system access permissions
         if context.permissions.has_system_access() {
-            return Err(AppError::Permission(
+            return Err(AppError::PermissionDenied(
                 "System access denied in sandbox".to_string(),
             ));
         }
@@ -377,7 +377,7 @@ impl ResourceMonitor {
         }
 
         Ok(ResourceUsage {
-            memory_mb: 0,
+            memory_mb: 0.0,
             cpu_time_secs: 0.0,
         })
     }

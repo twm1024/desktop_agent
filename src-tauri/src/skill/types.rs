@@ -2,7 +2,6 @@
 // Licensed under MIT License
 
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 
 /// Skill execution context
 #[derive(Debug, Clone, Serialize, Deserialize)]

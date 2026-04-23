@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 // Copyright 2024 Desktop Agent Team
 // Licensed under MIT License
 
@@ -19,7 +20,7 @@ impl TrayHandler {
         let quit = CustomMenuItem::new("quit".to_string(), "退出");
         let hide = CustomMenuItem::new("hide".to_string(), "隐藏窗口");
         let show = CustomMenuItem::new("show".to_string(), "显示窗口");
-        let separator = SystemTrayMenuItem::Separator;
+        let _separator = SystemTrayMenuItem::Separator;
         let skills = CustomMenuItem::new("skills".to_string(), "技能管理");
         let settings = CustomMenuItem::new("settings".to_string(), "设置");
         let dashboard = CustomMenuItem::new("dashboard".to_string(), "仪表板");
@@ -29,12 +30,12 @@ impl TrayHandler {
             .add_item(dashboard)
             .add_item(skills)
             .add_item(settings)
-            .add_native_item(separator)
+            .add_native_item(SystemTrayMenuItem::Separator)
             .add_item(show)
             .add_item(hide)
-            .add_native_item(separator)
+            .add_native_item(SystemTrayMenuItem::Separator)
             .add_item(status)
-            .add_native_item(separator)
+            .add_native_item(SystemTrayMenuItem::Separator)
             .add_item(quit);
 
         SystemTray::new().with_menu(menu)
@@ -114,7 +115,8 @@ impl TrayHandler {
     pub fn update_status(app: &AppHandle, status: &str) -> Result<()> {
         app.tray_handle()
             .get_item("status")
-            .set_title(format!("状态: {}", status));
+            .set_title(format!("状态: {}", status))
+            .ok();
         Ok(())
     }
 

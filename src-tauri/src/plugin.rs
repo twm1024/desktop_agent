@@ -5,6 +5,7 @@
 //!
 //! Provides a plugin architecture for extending application functionality
 
+#![allow(dead_code)]
 use crate::error::{AppError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

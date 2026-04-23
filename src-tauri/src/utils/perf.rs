@@ -5,10 +5,11 @@
 //!
 //! Tracks operation metrics, response times, and system resource usage
 
+#![allow(dead_code)]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use tokio::sync::RwLock;
 use tracing::debug;
 

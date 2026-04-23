@@ -13,9 +13,4 @@ pub mod feishu;
 pub mod wecom;
 pub mod filesystem;
 
-pub use adapter::{
-    PlatformAdapter, PlatformAdapterRegistry, PlatformError, PlatformEvent,
-    PlatformMessage, PlatformResponse, PlatformType, ResponseMessage,
-    ResponseOptions, ChatInfo, ChatType, MediaType, PlatformUser,
-    standardize_event,
-};
+pub use adapter::PlatformType;

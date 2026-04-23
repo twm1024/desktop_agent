@@ -1,6 +1,7 @@
 // Copyright 2024 Desktop Agent Team
 // Licensed under MIT License
 
+#![allow(dead_code)]
 use crate::config::Config;
 use crate::error::{AppError, Result};
 use serde::{Deserialize, Serialize};

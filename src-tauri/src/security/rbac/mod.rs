@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 // Copyright 2024 Desktop Agent Team
 // Licensed under MIT License
 
@@ -110,6 +111,7 @@ pub struct Permission {
     pub action: Action,
 }
 
+#[allow(non_upper_case_globals)]
 impl Permission {
     /// Create a new permission
     pub fn new(resource: Resource, action: Action) -> Self {
@@ -236,6 +238,18 @@ impl Permission {
         resource: Resource::Config,
         action: Action::Manage,
     };
+
+    // PascalCase convenience aliases (used in default_permissions and other places)
+    pub const SkillExecute: Permission = Permission::SKILL_EXECUTE;
+    pub const SkillList: Permission = Permission::SKILL_LIST;
+    pub const SkillView: Permission = Permission::SKILL_VIEW;
+    pub const FileRead: Permission = Permission::FILE_READ;
+    pub const FileWrite: Permission = Permission::FILE_WRITE;
+    pub const FileList: Permission = Permission::FILE_LIST;
+    pub const SystemInfo: Permission = Permission::SYSTEM_INFO;
+    pub const SessionCreate: Permission = Permission::SESSION_CREATE;
+    pub const SessionView: Permission = Permission::SESSION_VIEW;
+    pub const SessionOwn: Permission = Permission::SESSION_OWN;
 }
 
 /// Resource category

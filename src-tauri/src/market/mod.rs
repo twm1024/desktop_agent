@@ -5,15 +5,15 @@
 //!
 //! Provides skill marketplace for discovering, installing, and updating skills
 
+#![allow(dead_code)]
 use crate::database::Database;
 use crate::database::repositories::SkillRepository;
 use crate::error::{AppError, Result};
-use crate::skill::manifest::SkillManifest;
-use crate::services::network_service::{HttpRequest, HttpResponse, NetworkService};
+use crate::services::network_service::{HttpRequest, NetworkService};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use tracing::{info, warn};
+use tracing::info;
 
 /// Market configuration
 #[derive(Debug, Clone)]

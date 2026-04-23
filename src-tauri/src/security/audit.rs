@@ -5,10 +5,10 @@
 //!
 //! Records security-relevant events for compliance and incident investigation
 
+#![allow(dead_code)]
 use crate::error::Result;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio::io::AsyncWriteExt;
@@ -254,8 +254,8 @@ impl AuditLogger {
             None,
             Some(key),
             Some(serde_json::json!({
-                "old_value": old_value.map(|v| "[REDACTED]"),
-                "new_value": new_value.map(|v| "[REDACTED]"),
+                "old_value": old_value.map(|_v| "[REDACTED]"),
+                "new_value": new_value.map(|_v| "[REDACTED]"),
             })),
             true,
             None,

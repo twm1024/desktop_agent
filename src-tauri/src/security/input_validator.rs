@@ -5,6 +5,7 @@
 //!
 //! Provides validation utilities for user inputs, file paths, and API parameters
 
+#![allow(dead_code)]
 use crate::error::{AppError, Result};
 use once_cell::sync::Lazy;
 use regex::Regex;

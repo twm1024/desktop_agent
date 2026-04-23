@@ -1,6 +1,7 @@
 // Copyright 2024 Desktop Agent Team
 // Licensed under MIT License
 
+#![allow(dead_code)]
 use crate::database::Database;
 use crate::error::Result;
 use serde::{Deserialize, Serialize};
@@ -42,7 +43,7 @@ impl TaskStatus {
 }
 
 /// Task record in database
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct TaskRecord {
     pub id: String,
     pub user_id: String,

@@ -5,6 +5,7 @@
 //!
 //! Provides HTTP API endpoints for remote management
 
+#![allow(dead_code)]
 use crate::database::Database;
 use crate::dialog::engine::DialogEngine;
 use crate::error::Result;
@@ -168,7 +169,7 @@ impl ApiRouter {
         // Check API key
         let api_key = request.headers.get("Authorization")
             .and_then(|h| h.strip_prefix("Bearer "))
-            .or_else(|| request.headers.get("X-API-Key"));
+            .or_else(|| request.headers.get("X-API-Key").map(|x| x.as_str()));
 
         if api_key.is_none() {
             return Err("Missing authentication".to_string());
@@ -180,7 +181,7 @@ impl ApiRouter {
 
     // System handlers
     async fn handle_system_info(&self) -> Result<ApiResponse> {
-        let mut sys_service = crate::services::system_service::SystemService::new()?;
+        let sys_service = crate::services::system_service::SystemService::new()?;
         let info = sys_service.get_system_info()?;
         Ok(ApiResponse::ok(serde_json::to_value(info)?))
     }
@@ -208,7 +209,7 @@ impl ApiRouter {
     }
 
     async fn handle_execute_skill(&self, request: ApiRequest) -> Result<ApiResponse> {
-        let body = request.body.unwrap_or(serde_json::Value::Null);
+        let _body = request.body.unwrap_or(serde_json::Value::Null);
         Ok(ApiResponse::ok(serde_json::json!({
             "message": "Skill execution queued",
             "task_id": uuid::Uuid::new_v4().to_string(),

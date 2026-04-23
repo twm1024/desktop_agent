@@ -5,6 +5,7 @@
 //!
 //! Provides a priority-based task queue with retry logic and worker pools
 
+#![allow(dead_code)]
 use crate::error::Result;
 use crate::database::Database;
 use crate::database::repositories::{TaskRepository, TaskStatus};
@@ -14,7 +15,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::{Mutex, Semaphore};
-use tokio::time::{sleep, Instant};
+use tokio::time::sleep;
 use tracing::{debug, error, info, warn};
 
 /// Task execution context
@@ -105,8 +106,8 @@ impl TaskQueue {
     /// Register a task handler for a skill
     pub async fn register_handler(&self, skill_id: String, handler: Arc<dyn TaskHandler>) {
         let mut handlers = self.handlers.lock().await;
-        handlers.insert(skill_id, handler);
         info!("Registered handler for skill: {}", skill_id);
+        handlers.insert(skill_id, handler);
     }
 
     /// Unregister a task handler

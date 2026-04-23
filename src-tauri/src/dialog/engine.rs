@@ -5,11 +5,12 @@
 //!
 //! Orchestrates intent recognition, session management, and command execution
 
+#![allow(dead_code)]
 use crate::database::Database;
 use crate::dialog::intent::{IntentRecognizer, Intent, SlotValue};
 use crate::dialog::session::{SessionManager, DialogSession, DialogState};
 use crate::dialog::command::{
-    CommandRegistry, CommandContext, CommandResult,
+    CommandRegistry, CommandContext,
     HelpCommand, GreetingCommand, UnknownCommand,
 };
 use crate::error::Result;

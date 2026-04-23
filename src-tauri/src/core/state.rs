@@ -1,6 +1,7 @@
 // Copyright 2024 Desktop Agent Team
 // Licensed under MIT License
 
+#![allow(dead_code)]
 use crate::database::Database;
 use crate::services::ServiceContainer;
 use crate::skill::SkillEngine;

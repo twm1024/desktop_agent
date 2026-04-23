@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 // Copyright 2024 Desktop Agent Team
 // Licensed under MIT License
 
@@ -5,12 +6,11 @@
 //!
 //! Provides utilities for data manipulation, transformation, and analysis
 
+use base64::Engine;
 use crate::error::{AppError, Result};
 use crate::services::data_service::processors::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-pub mod processors;
 
 /// Data transformation type
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -217,6 +217,7 @@ impl DataService {
     }
 
     /// Validate data against schema
+    #[async_recursion::async_recursion]
     pub async fn validate(&self, data: &serde_json::Value, schema: &serde_json::Value) -> Result<bool> {
         // Basic JSON schema validation
         match (data, schema) {
@@ -356,8 +357,10 @@ pub mod processors {
 
                 let mut map = HashMap::new();
                 for (k, v) in obj {
-                    let str_val = v.as_str()
-                        .unwrap_or(&serde_json::to_string(v).unwrap_or_default());
+                    let str_val = match v.as_str() {
+                        Some(s) => s.to_string(),
+                        None => serde_json::to_string(v).unwrap_or_default(),
+                    };
                     map.insert(k.as_str(), str_val);
                 }
 
@@ -365,7 +368,7 @@ pub mod processors {
                     .map_err(|e| AppError::Serialization(format!("CSV write error: {}", e)))?;
             }
 
-            let csv_string = String::from_utf8(wtr.into_inner())
+            let csv_string = String::from_utf8(wtr.into_inner().map_err(|e| AppError::Serialization(format!("CSV flush error: {}", e)))?)
                 .map_err(|e| AppError::Serialization(format!("UTF-8 conversion error: {}", e)))?;
 
             Ok(serde_json::json!(csv_string))
@@ -378,7 +381,7 @@ pub mod processors {
             let input = data.as_str()
                 .ok_or_else(|| AppError::Serialization("Expected string input".to_string()))?;
 
-            let encoded = base64::encode(input);
+            let encoded = base64::engine::general_purpose::STANDARD.encode(input);
             Ok(serde_json::json!(encoded))
         }
 
@@ -386,7 +389,7 @@ pub mod processors {
             let input = data.as_str()
                 .ok_or_else(|| AppError::Serialization("Expected string input".to_string()))?;
 
-            let decoded = base64::decode(input)
+            let decoded = base64::engine::general_purpose::STANDARD.decode(input)
                 .map_err(|e| AppError::Serialization(format!("Base64 decode error: {}", e)))?;
 
             let string = String::from_utf8(decoded)
@@ -420,37 +423,38 @@ pub mod processors {
     impl HashProcessor {
         pub fn hash(data: &serde_json::Value, algorithm: HashAlgorithm) -> Result<serde_json::Value> {
             use sha2::{Sha256, Sha512, Digest};
-            use md5::{Md5};
+            use md5::Md5;
 
             let input = data.as_str()
                 .ok_or_else(|| AppError::Serialization("Expected string input".to_string()))?;
 
             let bytes = input.as_bytes();
-            let hash = match algorithm {
+            let hash_hex = match algorithm {
                 HashAlgorithm::Md5 => {
                     let mut hasher = Md5::new();
                     hasher.update(bytes);
-                    hasher.finalize()
+                    hex::encode(hasher.finalize())
                 }
                 HashAlgorithm::Sha1 => {
                     use sha1::Sha1;
+                    use sha1::Digest as Sha1Digest;
                     let mut hasher = Sha1::new();
                     hasher.update(bytes);
-                    hasher.digest().bytes()
+                    hex::encode(hasher.finalize())
                 }
                 HashAlgorithm::Sha256 => {
                     let mut hasher = Sha256::new();
                     hasher.update(bytes);
-                    hasher.finalize()
+                    hex::encode(hasher.finalize())
                 }
                 HashAlgorithm::Sha512 => {
                     let mut hasher = Sha512::new();
                     hasher.update(bytes);
-                    hasher.finalize()
+                    hex::encode(hasher.finalize())
                 }
             };
 
-            Ok(serde_json::json!(hex::encode(hash)))
+            Ok(serde_json::json!(hash_hex))
         }
     }
 
@@ -552,9 +556,9 @@ pub mod processors {
             let arr = data.as_array()
                 .ok_or_else(|| AppError::Serialization("Expected array input".to_string()))?;
 
-            let result = match op {
+            let result: f64 = match op {
                 AggregateOp::Count => {
-                    arr.len()
+                    arr.len() as f64
                 }
                 AggregateOp::Sum => {
                     let mut sum = 0.0;
@@ -655,8 +659,9 @@ pub mod processors {
             let mut result = pattern.to_string();
             for (key, value) in obj {
                 let placeholder = format!("{{{}}}", key);
+                let fallback = serde_json::to_string(value).unwrap_or_default();
                 let value_str = value.as_str()
-                    .unwrap_or(&serde_json::to_string(value).unwrap_or_default());
+                    .unwrap_or(&fallback);
                 result = result.replace(&placeholder, value_str);
             }
 

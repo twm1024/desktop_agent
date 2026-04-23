@@ -1,9 +1,10 @@
 // Copyright 2024 Desktop Agent Team
 // Licensed under MIT License
 
-use crate::error::{AppError, Result};
+#![allow(dead_code)]
+use crate::error::Result;
 use crate::skill::manifest::SkillManifest;
-use crate::skill::permissions::{FileAccess, SkillPermissions, SystemAction};
+use crate::skill::permissions::SkillPermissions;
 use crate::skill::types::{SkillContext, SkillParameters, SkillResult, SkillProgress};
 use crate::services::ServiceContainer;
 use std::path::PathBuf;
@@ -11,7 +12,7 @@ use std::process::Stdio;
 use std::sync::Arc;
 use tokio::process::Command;
 use tokio::sync::mpsc;
-use tracing::{debug, error, info, warn};
+use tracing::{error, info};
 
 pub struct SkillExecutor {
     services: Arc<ServiceContainer>,
@@ -30,7 +31,7 @@ impl SkillExecutor {
     pub async fn execute(
         &self,
         manifest: &SkillManifest,
-        permissions: &SkillPermissions,
+        _permissions: &SkillPermissions,
         params: SkillParameters,
         context: SkillContext,
     ) -> SkillResult {
@@ -44,8 +45,14 @@ impl SkillExecutor {
 
         // Build command
         let mut cmd = match runtime {
-            RuntimeType::Python => self.build_python_command(manifest)?,
-            RuntimeType::Node => self.build_node_command(manifest)?,
+            RuntimeType::Python => match self.build_python_command(manifest) {
+                Ok(cmd) => cmd,
+                Err(e) => return SkillResult::failure(format!("Failed to build python command: {}", e)),
+            },
+            RuntimeType::Node => match self.build_node_command(manifest) {
+                Ok(cmd) => cmd,
+                Err(e) => return SkillResult::failure(format!("Failed to build node command: {}", e)),
+            },
             RuntimeType::Unknown => {
                 return SkillResult::failure(format!("Unknown runtime for {}", manifest.main))
             }
@@ -126,7 +133,7 @@ impl SkillExecutor {
         permissions: &SkillPermissions,
         params: SkillParameters,
         context: SkillContext,
-        progress_tx: mpsc::Sender<SkillProgress>,
+        _progress_tx: mpsc::Sender<SkillProgress>,
     ) -> SkillResult {
         // TODO: Implement progress tracking
         // For now, just use basic execute
@@ -144,13 +151,13 @@ impl SkillExecutor {
     }
 
     fn build_python_command(&self, manifest: &SkillManifest) -> Result<Command> {
-        let cmd = Command::new("python3");
+        let mut cmd = Command::new("python3");
         cmd.arg(&manifest.main);
         Ok(cmd)
     }
 
     fn build_node_command(&self, manifest: &SkillManifest) -> Result<Command> {
-        let cmd = Command::new("node");
+        let mut cmd = Command::new("node");
         cmd.arg(&manifest.main);
         Ok(cmd)
     }

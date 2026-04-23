@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 // Copyright 2024 Desktop Agent Team
 // Licensed under MIT License
 

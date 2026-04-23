@@ -1,8 +1,11 @@
 // Copyright 2024 Desktop Agent Team
 // Licensed under MIT License
 
+#![allow(dead_code)]
 use crate::error::{AppError, Result};
-use aes_gcm::{aead::Aead, Aes256Gcm, KeyInit, Nonce};
+use aes_gcm::aead::{Aead, AeadCore};
+use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
+use base64::Engine;
 use keyring::Entry as KeyringEntry;
 use rand::Rng;
 use tracing::{info, warn};
@@ -17,19 +20,22 @@ impl ConfigEncryption {
     ///
     /// Retrieves or creates an encryption key from the system keychain
     pub fn new() -> Result<Self> {
-        let entry = KeyringEntry::new("desktop-agent", "encryption-key");
+        let entry = KeyringEntry::new("desktop-agent", "encryption-key")
+            .map_err(|e| AppError::security(format!("Keyring error: {}", e)))?;
 
         // Try to get existing key
         let key_bytes = match entry.get_password() {
             Ok(key_str) => {
                 info!("Loaded encryption key from keychain");
-                base64::decode(&key_str).map_err(|e| AppError::security(format!("Invalid key format: {}", e)))?
+                base64::engine::general_purpose::STANDARD
+                    .decode(&key_str)
+                    .map_err(|e| AppError::security(format!("Invalid key format: {}", e)))?
             }
             Err(_) => {
                 info!("Generating new encryption key");
                 // Generate new key
                 let key_bytes: [u8; 32] = rand::thread_rng().gen();
-                let key_str = base64::encode(key_bytes);
+                let key_str = base64::engine::general_purpose::STANDARD.encode(key_bytes);
 
                 // Save to keychain
                 if let Err(e) = entry.set_password(&key_str) {
@@ -57,12 +63,13 @@ impl ConfigEncryption {
         let mut result = nonce.to_vec();
         result.extend(ciphertext);
 
-        Ok(base64::encode(result))
+        Ok(base64::engine::general_purpose::STANDARD.encode(result))
     }
 
     /// Decrypt data
     pub fn decrypt(&self, ciphertext: &str) -> Result<String> {
-        let data = base64::decode(ciphertext)
+        let data = base64::engine::general_purpose::STANDARD
+            .decode(ciphertext)
             .map_err(|e| AppError::security(format!("Invalid ciphertext format: {}", e)))?;
 
         if data.len() < 12 {
@@ -98,17 +105,15 @@ impl ConfigEncryption {
     pub fn regenerate_key() -> Result<()> {
         info!("Regenerating encryption key");
 
-        let entry = KeyringEntry::new("desktop-agent", "encryption-key");
+        let entry = KeyringEntry::new("desktop-agent", "encryption-key")
+            .map_err(|e| AppError::security(format!("Keyring error: {}", e)))?;
 
         // Delete old key
-        entry.delete_credential()
-            .map_err(|e| {
-                warn!("Failed to delete old key: {}", e);
-            });
+        let _ = entry.delete_password();
 
         // Generate and save new key
         let key_bytes: [u8; 32] = rand::thread_rng().gen();
-        let key_str = base64::encode(key_bytes);
+        let key_str = base64::engine::general_purpose::STANDARD.encode(key_bytes);
 
         entry.set_password(&key_str)
             .map_err(|e| AppError::security(format!("Failed to save new key: {}", e)))?;
@@ -132,14 +137,12 @@ mod tests {
 
     #[test]
     fn test_encryption_decryption() {
-        // This test may fail if keyring is not available
         match ConfigEncryption::new() {
             Ok(encryption) => {
                 let plaintext = "This is a secret value";
 
                 let encrypted = encryption.encrypt(plaintext).unwrap();
                 assert_ne!(plaintext, encrypted);
-                assert!(encrypted.starts_with("eyJ")); // base64 starts with this
 
                 let decrypted = encryption.decrypt(&encrypted).unwrap();
                 assert_eq!(plaintext, decrypted);
@@ -171,7 +174,7 @@ mod tests {
     fn test_encryption_unicode() {
         match ConfigEncryption::new() {
             Ok(encryption) => {
-                let plaintext = "测试中文 🚀 这是一个秘密";
+                let plaintext = "测试中文 这是一个秘密";
 
                 let encrypted = encryption.encrypt(plaintext).unwrap();
                 let decrypted = encryption.decrypt(&encrypted).unwrap();

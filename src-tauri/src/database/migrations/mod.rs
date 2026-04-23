@@ -3,6 +3,7 @@
 
 //! Database migration system
 
+#![allow(dead_code)]
 use sqlx::SqlitePool;
 use tracing::{info, warn};
 
@@ -85,13 +86,14 @@ impl MigrationManager {
     pub async fn apply_migrations(&self) -> crate::error::Result<usize> {
         let applied = self.get_applied_migrations().await?;
 
-        // Sort migrations by version
-        let mut migrations = self.migrations.clone();
-        migrations.sort_by_key(|m| m.version());
+        // Sort migrations by version (use indices to avoid cloning Box<dyn Migration>)
+        let mut indices: Vec<usize> = (0..self.migrations.len()).collect();
+        indices.sort_by_key(|&i| self.migrations[i].version());
 
         let mut count = 0;
 
-        for migration in migrations {
+        for idx in indices {
+            let migration = &self.migrations[idx];
             if applied.contains(&migration.version().to_string()) {
                 info!("Migration {} ({}) already applied, skipping", migration.version(), migration.name());
                 continue;

@@ -3,22 +3,23 @@
 
 //! Database module with migration system and repository layer
 
+#![allow(dead_code)]
 pub mod migrations;
 pub mod repositories;
 
 use crate::error::Result;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
 use sqlx::{Sqlite, Transaction};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
-use tracing::{info, warn};
+use tracing::info;
 
-pub use migrations::{Migration, MigrationManager};
-pub use repositories::*;
+pub use migrations::MigrationManager;
 
 /// Main database connection pool
 pub struct Database {
     pool: SqlitePool,
+    db_path: PathBuf,
 }
 
 impl Database {
@@ -46,7 +47,7 @@ impl Database {
 
         info!("Database connected at {:?}", db_path);
 
-        let db = Self { pool };
+        let db = Self { pool, db_path: db_path.to_path_buf() };
 
         // Run migrations
         db.run_migrations().await?;
@@ -103,18 +104,6 @@ impl Database {
             tokio::fs::create_dir_all(parent).await?;
         }
 
-        // Use SQLite backup API
-        let src = sqlx::sqlite::SqlitePoolOptions::new()
-            .max_connections(1)
-            .connect_with(SqliteConnectOptions::from_str(
-                &self.pool.connect_options().get_filename().display().to_string()
-            )?)
-            .await?;
-
-        // Open backup database
-        let dst_options = SqliteConnectOptions::from_str(backup_path.to_str().unwrap())?
-            .create_if_missing(true);
-
         // Use SQL backup command (SQLite 3.27+)
         sqlx::query(&format!(
             "VACUUM INTO '{}'",
@@ -137,13 +126,13 @@ impl Database {
             ));
         }
 
+        // Get db path before closing pool
+        let db_path = self.db_path.clone();
+
         // Close existing pool
         self.pool.close().await;
 
         // Copy backup file to database location
-        let db_path = PathBuf::from(
-            self.pool.connect_options().get_filename()
-        );
         tokio::fs::copy(backup_path, &db_path).await?;
 
         info!("Database restore completed");

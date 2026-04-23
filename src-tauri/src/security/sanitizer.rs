@@ -1,6 +1,7 @@
 // Copyright 2024 Desktop Agent Team
 // Licensed under MIT License
 
+#![allow(dead_code)]
 use once_cell::sync::Lazy;
 use regex::Regex;
 
@@ -26,7 +27,7 @@ impl LogSanitizer {
     }
 
     /// Sanitize JSON by removing sensitive fields
-    pub fn sanitize_json(json: &str) -> Result<String, serde_json::Value> {
+    pub fn sanitize_json(json: &str) -> std::result::Result<String, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
 
         // Create a sanitized version
@@ -75,22 +76,22 @@ impl LogSanitizer {
 // Sensitive field name patterns
 static SENSITIVE_FIELD_PATTERNS: Lazy<Vec<(Regex, &str)>> = Lazy::new(|| {
     vec![
-        (Regex::new(r"password['\"]?\s*[:=]\s*['\"]?[^'\"]+").unwrap(), "password=***"),
-        (Regex::new(r"passwd['\"]?\s*[:=]\s*['\"]?[^'\"]+").unwrap(), "passwd=***"),
-        (Regex::new(r"pwd['\"]?\s*[:=]\s*['\"]?[^'\"]+").unwrap(), "pwd=***"),
-        (Regex::new(r"token['\"]?\s*[:=]\s*['\"]?[^'\"]{10,}").unwrap(), "token=***"),
-        (Regex::new(r"access_token['\"]?\s*[:=]\s*['\"]?[^'\"]{10,}").unwrap(), "access_token=***"),
-        (Regex::new(r"refresh_token['\"]?\s*[:=]\s*['\"]?[^'\"]{10,}").unwrap(), "refresh_token=***"),
-        (Regex::new(r"secret['\"]?\s*[:=]\s*['\"]?[^'\"]{10,}").unwrap(), "secret=***"),
-        (Regex::new(r"api_key['\"]?\s*[:=]\s*['\"]?[^'\"]{10,}").unwrap(), "api_key=***"),
-        (Regex::new(r"apikey['\"]?\s*[:=]\s*['\"]?[^'\"]{10,}").unwrap(), "apikey=***"),
-        (Regex::new(r"app_secret['\"]?\s*[:=]\s*['\"]?[^'\"]{10,}").unwrap(), "app_secret=***"),
-        (Regex::new(r"appkey['\"]?\s*[:=]\s*['\"]?[^'\"]{10,}").unwrap(), "appkey=***"),
-        (Regex::new(r"private_key['\"]?\s*[:=]\s*['\"]?[^'\"]{20,}").unwrap(), "private_key=***"),
-        (Regex::new(r"privatekey['\"]?\s*[:=]\s*['\"]?[^'\"]{20,}").unwrap(), "privatekey=***"),
-        (Regex::new(r"authorization['\"]?\s*[:=]\s*['\"]?[^'\"]{10,}").unwrap(), "authorization=***"),
-        (Regex::new(r"auth['\"]?\s*[:=]\s*['\"]?[^'\"]{10,}").unwrap(), "auth=***"),
-        (Regex::new(r"bearer['\"]?\s*[:=]\s*['\"]?[^'\"]{10,}").unwrap(), "bearer=***"),
+        (Regex::new(r###"password['"]?\s*[:=]\s*['"]?[^'"]+"###).unwrap(), "password=***"),
+        (Regex::new(r###"passwd['"]?\s*[:=]\s*['"]?[^'"]+"###).unwrap(), "passwd=***"),
+        (Regex::new(r###"pwd['"]?\s*[:=]\s*['"]?[^'"]+"###).unwrap(), "pwd=***"),
+        (Regex::new(r###"token['"]?\s*[:=]\s*['"]?[^'"]{10,}"###).unwrap(), "token=***"),
+        (Regex::new(r###"access_token['"]?\s*[:=]\s*['"]?[^'"]{10,}"###).unwrap(), "access_token=***"),
+        (Regex::new(r###"refresh_token['"]?\s*[:=]\s*['"]?[^'"]{10,}"###).unwrap(), "refresh_token=***"),
+        (Regex::new(r###"secret['"]?\s*[:=]\s*['"]?[^'"]{10,}"###).unwrap(), "secret=***"),
+        (Regex::new(r###"api_key['"]?\s*[:=]\s*['"]?[^'"]{10,}"###).unwrap(), "api_key=***"),
+        (Regex::new(r###"apikey['"]?\s*[:=]\s*['"]?[^'"]{10,}"###).unwrap(), "apikey=***"),
+        (Regex::new(r###"app_secret['"]?\s*[:=]\s*['"]?[^'"]{10,}"###).unwrap(), "app_secret=***"),
+        (Regex::new(r###"appkey['"]?\s*[:=]\s*['"]?[^'"]{10,}"###).unwrap(), "appkey=***"),
+        (Regex::new(r###"private_key['"]?\s*[:=]\s*['"]?[^'"]{20,}"###).unwrap(), "private_key=***"),
+        (Regex::new(r###"privatekey['"]?\s*[:=]\s*['"]?[^'"]{20,}"###).unwrap(), "privatekey=***"),
+        (Regex::new(r###"authorization['"]?\s*[:=]\s*['"]?[^'"]{10,}"###).unwrap(), "authorization=***"),
+        (Regex::new(r###"auth['"]?\s*[:=]\s*['"]?[^'"]{10,}"###).unwrap(), "auth=***"),
+        (Regex::new(r###"bearer['"]?\s*[:=]\s*['"]?[^'"]{10,}"###).unwrap(), "bearer=***"),
     ]
 });
 

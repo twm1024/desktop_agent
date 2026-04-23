@@ -2,8 +2,8 @@
 // Licensed under MIT License
 
 pub mod app;
+pub mod commands;
 pub mod event_bus;
 pub mod state;
 pub mod tray;
 
-pub use tray::TrayHandler;

@@ -1,6 +1,7 @@
 // Copyright 2024 Desktop Agent Team
 // Licensed under MIT License
 
+#![allow(dead_code)]
 use crate::database::Database;
 use crate::error::{AppError, Result};
 use crate::services::ServiceContainer;
@@ -27,13 +28,13 @@ impl SkillEngine {
         let executor = SkillExecutor::new(services.clone(), skills_dir.clone());
 
         Ok(Self {
-            skills_dir,
-            db,
-            services,
+            skills_dir: skills_dir.clone(),
+            db: db.clone(),
+            services: services.clone(),
             loader: Arc::new(RwLock::new(SkillLoader::new(
-                skills_dir.clone(),
-                db.clone(),
-                services.clone(),
+                skills_dir,
+                db,
+                services,
             ))),
             executor,
             progress_senders: Arc::new(RwLock::new(Vec::new())),
@@ -68,20 +69,21 @@ impl SkillEngine {
         params: SkillParameters,
         context: SkillContext,
     ) -> Result<SkillResult> {
-        let loader = self.loader.read().await;
+        let (manifest, permissions) = {
+            let loader = self.loader.read().await;
 
-        // Get skill manifest and permissions
-        let manifest = loader
-            .get_manifest(skill_id)
-            .ok_or_else(|| AppError::not_found(format!("Skill not found: {}", skill_id)))?
-            .clone();
+            let manifest = loader
+                .get_manifest(skill_id)
+                .ok_or_else(|| AppError::not_found(format!("Skill not found: {}", skill_id)))?
+                .clone();
 
-        let permissions = loader
-            .get_permissions(skill_id)
-            .ok_or_else(|| AppError::not_found(format!("Skill permissions not found: {}", skill_id)))?
-            .clone();
+            let permissions = loader
+                .get_permissions(skill_id)
+                .ok_or_else(|| AppError::not_found(format!("Skill permissions not found: {}", skill_id)))?
+                .clone();
 
-        drop(loader);
+            (manifest, permissions)
+        };
 
         // Update execution count
         self.update_execution_count(skill_id).await;

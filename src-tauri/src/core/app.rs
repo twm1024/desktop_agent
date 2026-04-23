@@ -1,6 +1,7 @@
 // Copyright 2024 Desktop Agent Team
 // Licensed under MIT License
 
+#![allow(dead_code)]
 use crate::config::Config;
 use crate::core::state::AppState;
 use crate::database::Database;
@@ -9,8 +10,7 @@ use crate::services::ServiceContainer;
 use crate::skill::SkillEngine;
 use std::sync::Arc;
 use tauri::Manager;
-use tauri::{App, AppHandle, Builder, SystemTray, SystemTrayEvent, SystemTrayMenu};
-use tracing::{error, info};
+use tauri::{App, Builder, SystemTray, SystemTrayEvent, SystemTrayMenu};
 
 pub struct Application {
     config: Config,

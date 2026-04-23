@@ -5,13 +5,15 @@
 //!
 //! Provides command registration, matching, and execution
 
+#![allow(dead_code)]
 use crate::error::{AppError, Result};
 use crate::dialog::intent::Intent;
 use async_trait::async_trait;
+use chrono::Timelike;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tracing::{info, error};
+use tracing::info;
 
 /// Command execution context
 #[derive(Debug, Clone)]
@@ -220,7 +222,7 @@ impl Command for HelpCommand {
     fn name(&self) -> &str { "help" }
     fn description(&self) -> &str { "显示帮助信息" }
 
-    async fn execute(&self, context: CommandContext) -> Result<CommandResult> {
+    async fn execute(&self, _context: CommandContext) -> Result<CommandResult> {
         Ok(CommandResult::success(
             "我是 Desktop Agent 助手，可以帮助你：\n\
              📁 文件操作：列出、搜索、复制、移动文件\n\
@@ -240,7 +242,7 @@ impl Command for GreetingCommand {
     fn name(&self) -> &str { "greeting" }
     fn description(&self) -> &str { "问候回复" }
 
-    async fn execute(&self, context: CommandContext) -> Result<CommandResult> {
+    async fn execute(&self, _context: CommandContext) -> Result<CommandResult> {
         let hour = chrono::Local::now().hour();
         let greeting = match hour {
             0..=5 => "夜深了",
@@ -266,7 +268,7 @@ impl Command for UnknownCommand {
     fn name(&self) -> &str { "unknown" }
     fn description(&self) -> &str { "未知命令回退" }
 
-    async fn execute(&self, context: CommandContext) -> Result<CommandResult> {
+    async fn execute(&self, _context: CommandContext) -> Result<CommandResult> {
         Ok(CommandResult::success(
             "抱歉，我不太理解你的意思。你可以输入「帮助」查看我能做什么。"
         ))

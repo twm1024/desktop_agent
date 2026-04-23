@@ -5,6 +5,7 @@
 //!
 //! Provides webhook handling and API integration for WeCom platform
 
+#![allow(dead_code)]
 use async_trait::async_trait;
 use crate::platform::adapter::{PlatformAdapter, PlatformEvent, PlatformResponse, PlatformUser, PlatformMessage, ResponseMessage, ChatInfo, ChatType, MediaType, PlatformError};
 use crate::platform::PlatformType;
@@ -28,7 +29,7 @@ impl WeComAdapter {
         token: String,
         aes_key: String,
     ) -> Self {
-        let webhook_verifier = WebhookVerifier::new_with_token(token.clone());
+        let webhook_verifier = WebhookVerifier::new(token.clone());
 
         Self {
             corp_id,
@@ -157,7 +158,7 @@ impl WeComAdapter {
         let request = SendMessageRequest {
             touser: None,
             chatid: Some(chat_id.to_string()),
-            msgtype,
+            msgtype: msg_type,
             text,
             markdown,
             textcard,

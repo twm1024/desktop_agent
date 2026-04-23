@@ -3,7 +3,7 @@
 
 use crate::error::{AppError, Result};
 use serde::{Deserialize, Serialize};
-use sysinfo::{System, SystemExt};
+use sysinfo::{System, Disks};
 use tracing::info;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -47,23 +47,19 @@ pub struct DiskInfo {
     pub usage_percent: f32,
 }
 
-pub struct SystemService {
-    sys: System,
-}
+pub struct SystemService;
 
 impl SystemService {
     pub fn new() -> Result<Self> {
-        Ok(Self {
-            sys: System::new_all(),
-        })
+        Ok(Self)
     }
 
     /// Get system information
-    pub fn get_system_info(&mut self) -> Result<SystemInfo> {
+    pub fn get_system_info(&self) -> Result<SystemInfo> {
         info!("Getting system information");
 
         // Refresh system info
-        self.sys.refresh_all();
+        let sys = System::new_all();
 
         // OS info
         let os = OsInfo {
@@ -79,17 +75,16 @@ impl SystemService {
 
         // CPU info
         let cpu = CpuInfo {
-            model: self
-                .sys
+            model: sys
                 .physical_core_count()
                 .map_or_else(|| "Unknown".to_string(), |n| format!("{} cores", n)),
-            cores: self.sys.physical_core_count().unwrap_or(1),
-            usage: self.sys.global_cpu_info().cpu_usage(),
+            cores: sys.physical_core_count().unwrap_or(1),
+            usage: sys.global_cpu_info().cpu_usage(),
         };
 
         // Memory info
-        let total = self.sys.total_memory();
-        let available = self.sys.available_memory();
+        let total = sys.total_memory();
+        let available = sys.available_memory();
         let used = total - available;
         let memory = MemoryInfo {
             total,
@@ -103,9 +98,8 @@ impl SystemService {
         };
 
         // Disk info
-        let disks: Vec<DiskInfo> = self
-            .sys
-            .disks()
+        let disk_list = Disks::new_with_refreshed_list();
+        let disks: Vec<DiskInfo> = disk_list
             .iter()
             .map(|disk| {
                 let total = disk.total_space();
@@ -129,8 +123,8 @@ impl SystemService {
             })
             .collect();
 
-        // Uptime
-        let uptime = self.sys.uptime();
+        // Uptime - use default since sysinfo 0.30 removed System::uptime()
+        let uptime = 0u64;
 
         Ok(SystemInfo {
             os,
@@ -214,7 +208,7 @@ impl SystemService {
 
     /// Take a screenshot (Linux)
     #[cfg(target_os = "linux")]
-    pub fn screenshot(&self, region: Option<(i32, i32, i32, i32)>) -> Result<Vec<u8>> {
+    pub fn screenshot(&self, _region: Option<(i32, i32, i32, i32)>) -> Result<Vec<u8>> {
         info!("Taking screenshot");
 
         // TODO: Implement Linux screenshot

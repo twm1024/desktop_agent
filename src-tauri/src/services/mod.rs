@@ -1,6 +1,7 @@
 // Copyright 2024 Desktop Agent Team
 // Licensed under MIT License
 
+#![allow(dead_code)]
 pub mod file_service;
 pub mod system_service;
 pub mod text_service;
@@ -21,6 +22,7 @@ use std::sync::Arc;
 
 /// Container for all application services
 pub struct ServiceContainer {
+    pub db: Arc<Database>,
     pub file_service: Arc<FileService>,
     pub system_service: Arc<SystemService>,
     pub text_service: Arc<TextService>,
@@ -39,6 +41,7 @@ impl ServiceContainer {
         let backup_service = Arc::new(BackupService::new(config.clone(), Some(db.clone())));
 
         Ok(Self {
+            db,
             file_service,
             system_service,
             text_service,

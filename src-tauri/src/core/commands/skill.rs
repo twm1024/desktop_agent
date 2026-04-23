@@ -30,9 +30,9 @@ pub async fn execute_skill(
     };
 
     let context = SkillContext {
-        user_id,
-        chat_id,
-        platform,
+        user_id: user_id.clone(),
+        chat_id: chat_id.clone(),
+        platform: platform.clone(),
         session_id: format!("{}:{}:{}", platform, user_id, chat_id),
         timestamp: chrono::Utc::now().timestamp(),
     };
